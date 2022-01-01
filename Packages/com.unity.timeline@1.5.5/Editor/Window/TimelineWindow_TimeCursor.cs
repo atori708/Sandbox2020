@@ -9,6 +9,10 @@ namespace UnityEditor.Timeline
     {
         TimeAreaItem m_PlayHead;
         
+        public event Action<double, double> OnChangedPlayHead;
+
+        double oldTime;
+
         void TimeCursorGUI(TimelineItemArea area)
         {
             DrawTimeOnSlider();
@@ -64,18 +68,24 @@ namespace UnityEditor.Timeline
                     state.SetPlaying(false);
                     m_PlayHead.HandleManipulatorsEvents(state);
                     state.editSequence.time = Math.Max(0.0, state.GetSnappedTimeAtMousePosition(Event.current.mousePosition));
+
+                    OnChangedPlayHead?.Invoke(oldTime, state.editSequence.time);
                 }
             }
 
             m_PlayHead.drawLine = drawline;
             m_PlayHead.drawHead = drawHead;
             m_PlayHead.Draw(sequenceContentRect, state, state.editSequence.time);
+
+            oldTime = state.editSequence.time;
         }
 
         void OnTrackHeadDrag(double newTime)
         {
             state.editSequence.time = Math.Max(0.0, newTime);
             m_PlayHead.showTooltip = true;
+
+            OnChangedPlayHead?.Invoke(oldTime, state.editSequence.time);
         }
     }
 }
